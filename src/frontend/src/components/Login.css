@@ -1,0 +1,61 @@
+body {
+  background-color: #ffffff;
+  color: #0d3b66;
+}
+
+.container-box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  gap: 60px;
+  padding: 20px;
+}
+
+.company-title {
+  text-align: right;
+  margin-right: 30px; /* 살짝 왼쪽으로 이동 */
+}
+
+.company-title h1 {
+  font-size: 2.7rem; /* 살짝 키움 */
+  font-weight: 700;
+  margin: 0;
+}
+
+.company-title small {
+  font-size: 1.1rem;
+  color: #4a4a4a;
+}
+
+.login-card {
+  width: 360px;
+  padding: 30px;
+  border-radius: 1rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  background-color: #ffffff;
+}
+
+#message {
+  min-height: 1.2rem;
+}
+
+.btn-custom {
+  background-color: #0d3b66;
+  color: #fff;
+}
+
+.btn-custom:hover {
+  background-color: #0b3157;
+  color: #fff;
+}
+
+.btn-outline-custom {
+  border: 1px solid #0d3b66;
+  color: #0d3b66;
+}
+
+.btn-outline-custom:hover {
+  background-color: #0d3b66;
+  color: #fff;
+} 
