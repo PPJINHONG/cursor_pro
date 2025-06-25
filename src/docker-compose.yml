@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  backend:
+    networks:
+      - lognet
+    build:
+      context: ./backend
+    container_name: fastapi-backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ../.env
+    depends_on:
+      - db
+
+  db:
+    networks:
+      - lognet
+    image: postgres:15
+    container_name: postgres-db
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
+
+networks:
+  lognet:
+    driver: bridge

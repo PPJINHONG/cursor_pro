@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from routers import ingest, dashboard   
 from database import init_db
+import logging
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
@@ -9,4 +11,9 @@ app.include_router(dashboard.router, prefix="/api")
 
 @app.on_event("startup")
 async def startup_event():
-    await init_db()
+    try:
+        await init_db()
+        logger.info("✅ Database initialized successfully.")
+    except Exception as e:
+        logger.error(f"❌ Failed to initialize DB: {e}")
+        raise
