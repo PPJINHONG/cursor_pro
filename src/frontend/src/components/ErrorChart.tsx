@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   PieChart,
   Pie,
@@ -7,141 +7,119 @@ import {
   Tooltip,
   Legend
 } from 'recharts';
-import { ErrorData } from '../services/api';
+import { dashboardApi, ErrorData } from '../services/api';
 
-interface ErrorChartProps {
-  data: ErrorData;
-}
+const ErrorChart: React.FC = () => {
+  const [data, setData] = useState<ErrorData>({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-const ErrorChart: React.FC<ErrorChartProps> = ({ data }) => {
-  // 데이터가 없으면 로딩 메시지 표시
-  if (!data || Object.keys(data).length === 0) {
-    return (
-      <div className="chart-container">
-        <div className="no-data">에러 분포 데이터가 없습니다.</div>
-      </div>
-    );
-  }
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const end = new Date();
+      const start = new Date();
+      start.setDate(start.getDate() - 3); // 최근 3일
+      
+      const errorData = await dashboardApi.getErrors(
+        start.toISOString(),
+        end.toISOString()
+      );
+      
+      setData(errorData);
+    } catch (err) {
+      setError('에러 데이터를 불러오는데 실패했습니다.');
+      console.error('Error data fetch error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // 차트 데이터 포맷팅
-  const chartData = Object.entries(data).map(([key, value]) => ({
-    name: key,
-    value: value,
-    color: getStatusColor(key)
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const COLORS = ['#52c41a', '#1890ff', '#faad14', '#f5222d', '#722ed1'];
+
+  const chartData = Object.entries(data).map(([status, count]) => ({
+    name: status,
+    value: count
   }));
 
-  // 상태 코드별 색상 정의
-  function getStatusColor(status: string): string {
-    switch (status) {
-      case '200xx':
-        return '#52c41a'; // 성공 - 초록색
-      case '300xx':
-        return '#1890ff'; // 리다이렉트 - 파란색
-      case '400xx':
-        return '#faad14'; // 클라이언트 에러 - 주황색
-      case '500xx':
-        return '#f5222d'; // 서버 에러 - 빨간색
-      default:
-        return '#d9d9d9'; // 기타 - 회색
-    }
+  if (loading) {
+    return <div className="loading">에러 데이터를 불러오는 중...</div>;
   }
 
-  // 상태 코드별 설명
-  function getStatusDescription(status: string): string {
-    switch (status) {
-      case '200xx':
-        return '성공 (2xx)';
-      case '300xx':
-        return '리다이렉트 (3xx)';
-      case '400xx':
-        return '클라이언트 에러 (4xx)';
-      case '500xx':
-        return '서버 에러 (5xx)';
-      default:
-        return status;
-    }
+  if (error) {
+    return <div className="error">{error}</div>;
   }
 
-  // 총 요청 수 계산
-  const totalRequests = Object.values(data).reduce((sum, count) => sum + count, 0);
+  if (chartData.length === 0) {
+    return <div className="loading">에러 데이터가 없습니다.</div>;
+  }
 
-  // 성공률 계산
-  const successRate = data['200xx'] ? ((data['200xx'] / totalRequests) * 100).toFixed(1) : '0.0';
-
-  // 에러율 계산
-  const errorRate = data['400xx'] || data['500xx'] 
-    ? (((data['400xx'] || 0) + (data['500xx'] || 0)) / totalRequests * 100).toFixed(1) 
-    : '0.0';
+  const totalErrors = chartData.reduce((sum, item) => sum + item.value, 0);
 
   return (
     <div className="chart-container">
-      <ResponsiveContainer width="100%" height={300}>
-        <PieChart>
-          <Pie
-            data={chartData}
-            cx="50%"
-            cy="50%"
-            labelLine={false}
-            label={({ name, percent }) => `${getStatusDescription(name)} ${percent ? (percent * 100).toFixed(0) : 0}%`}
-            outerRadius={80}
-            fill="#8884d8"
-            dataKey="value"
-          >
-            {chartData.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={entry.color} />
-            ))}
-          </Pie>
-          <Tooltip 
-            formatter={(value: number) => [`${value}건`, '요청 수']}
-            labelFormatter={(label) => getStatusDescription(label)}
-          />
-          <Legend 
-            formatter={(value) => getStatusDescription(value)}
-            layout="horizontal"
-            verticalAlign="bottom"
-            align="center"
-          />
-        </PieChart>
-      </ResponsiveContainer>
+      <h3>상태 코드 분포</h3>
+      <div className="chart-wrapper">
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={chartData}
+              cx="50%"
+              cy="50%"
+              labelLine={false}
+              label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+              outerRadius={120}
+              fill="#8884d8"
+              dataKey="value"
+            >
+              {chartData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              ))}
+            </Pie>
+            <Tooltip 
+              formatter={(value: number) => [`${value}건`, '요청 수']}
+            />
+            <Legend />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
       
       {/* 요약 통계 */}
-      <div className="chart-summary">
-        <div className="summary-item">
-          <span className="label">총 요청:</span>
-          <span className="value">{totalRequests.toLocaleString()}건</span>
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', 
+        gap: '15px', 
+        marginTop: '20px',
+        padding: '15px',
+        background: '#f8f9fa',
+        borderRadius: '4px'
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '12px', color: '#666', marginBottom: '5px' }}>총 요청</div>
+          <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#333' }}>
+            {totalErrors.toLocaleString()}건
+          </div>
         </div>
-        <div className="summary-item">
-          <span className="label">성공률:</span>
-          <span className="value success">{successRate}%</span>
-        </div>
-        <div className="summary-item">
-          <span className="label">에러율:</span>
-          <span className="value error">{errorRate}%</span>
-        </div>
-        <div className="summary-item">
-          <span className="label">가장 많은 에러:</span>
-          <span className="value">
-            {Object.entries(data)
-              .filter(([key]) => key !== '200xx')
-              .sort(([,a], [,b]) => b - a)[0]?.[0] || '-'}
-          </span>
-        </div>
-      </div>
-
-      {/* 상세 통계 테이블 */}
-      <div className="error-details">
-        <h4>상세 통계</h4>
-        <div className="error-table">
-          {Object.entries(data).map(([status, count]) => (
-            <div key={status} className="error-row">
-              <span className="error-status">{getStatusDescription(status)}</span>
-              <span className="error-count">{count.toLocaleString()}건</span>
-              <span className="error-percentage">
-                {((count / totalRequests) * 100).toFixed(1)}%
-              </span>
+        {chartData.map((item, index) => (
+          <div key={item.name} style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '12px', color: '#666', marginBottom: '5px' }}>
+              {item.name} 상태
             </div>
-          ))}
-        </div>
+            <div style={{ 
+              fontSize: '18px', 
+              fontWeight: 'bold', 
+              color: COLORS[index % COLORS.length] 
+            }}>
+              {item.value.toLocaleString()}건
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
