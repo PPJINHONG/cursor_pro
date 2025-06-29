@@ -124,6 +124,33 @@ async def anomalies(
     ]
 
 
+@router.get("/recent-logs", summary="최근 로그 조회")
+async def recent_logs(
+    limit: int = Query(50, description="조회할 로그 개수"),
+    db: AsyncSession = Depends(get_db),
+):
+    stmt = (
+        select(LogEntry)
+        .order_by(LogEntry.id.desc())
+        .limit(limit)
+    )
+    result = await db.execute(stmt)
+    logs = result.scalars().all()
+    
+    return [
+        {
+            "id": log.id,
+            "timestamp": log.timestamp.isoformat(),
+            "method": log.method,
+            "path": log.path,
+            "status": log.status,
+            "latency_ms": log.latency_ms,
+            "client_ip": log.client_ip,
+        }
+        for log in logs
+    ]
+
+
 @router.websocket("/logs/ws")
 async def websocket_logs(websocket: WebSocket):
     """

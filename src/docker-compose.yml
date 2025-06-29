@@ -2,8 +2,6 @@ version: '3.8'
 
 services:
   backend:
-    networks:
-      - lognet
     build:
       context: ./backend
     container_name: fastapi-backend
@@ -11,12 +9,12 @@ services:
       - "8000:8000"
     env_file:
       - ../.env
+    networks:
+      - lognet
     depends_on:
       - db
 
   db:
-    networks:
-      - lognet
     image: postgres:15
     container_name: postgres-db
     restart: always
@@ -28,12 +26,12 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - pgdata:/var/lib/postgresql/data
-   
+    networks:
+      - lognet
 
 volumes:
   pgdata:
 
-
 networks:
   lognet:
-    external: true 
+    external: true

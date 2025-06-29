@@ -1,0 +1,282 @@
+.realtime-logs {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+
+.logs-header {
+  padding: 15px 20px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.logs-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 16px;
+}
+
+.logs-controls {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.connection-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+.status-dot.connected {
+  background-color: #52c41a;
+}
+
+.status-dot.disconnected {
+  background-color: #f5222d;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+.status-text {
+  color: #666;
+  font-weight: 500;
+}
+
+.test-connection-btn {
+  padding: 6px 12px;
+  background: #1890ff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.test-connection-btn:hover {
+  background: #40a9ff;
+}
+
+.refresh-logs-btn {
+  padding: 6px 12px;
+  background: #1890ff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.refresh-logs-btn:hover:not(:disabled) {
+  background: #40a9ff;
+}
+
+.refresh-logs-btn:disabled {
+  background: #d9d9d9;
+  cursor: not-allowed;
+}
+
+.auto-refresh-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #666;
+  cursor: pointer;
+}
+
+.auto-refresh-toggle input[type="checkbox"] {
+  margin: 0;
+}
+
+.max-logs-select {
+  padding: 4px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  background: white;
+}
+
+.clear-logs-btn {
+  padding: 6px 12px;
+  background: #ff4d4f;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.clear-logs-btn:hover {
+  background: #ff7875;
+}
+
+.logs-container {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.no-logs {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  color: #666;
+  font-size: 14px;
+  background: #f8f9fa;
+}
+
+.logs-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.log-item {
+  display: grid;
+  grid-template-columns: 80px 60px 1fr 60px 80px 120px;
+  gap: 10px;
+  padding: 10px 20px;
+  border-bottom: 1px solid #f0f0f0;
+  align-items: center;
+  font-size: 13px;
+  transition: background-color 0.2s;
+}
+
+.log-item:hover {
+  background-color: #f8f9fa;
+}
+
+.log-item:first-child {
+  background-color: #e6f7ff;
+  border-left: 4px solid #1890ff;
+}
+
+.log-time {
+  color: #666;
+  font-weight: 500;
+}
+
+.log-method {
+  color: white;
+  font-weight: bold;
+  text-align: center;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.log-path {
+  color: #333;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.log-status {
+  font-weight: bold;
+  text-align: center;
+}
+
+.log-latency {
+  color: #666;
+  text-align: center;
+  font-weight: 500;
+}
+
+.log-ip {
+  color: #888;
+  font-size: 12px;
+  text-align: center;
+}
+
+.logs-footer {
+  padding: 10px 20px;
+  background: #f8f9fa;
+  border-top: 1px solid #e9ecef;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  color: #666;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.last-update {
+  color: #666;
+  font-size: 12px;
+}
+
+.live-indicator {
+  color: #52c41a;
+  font-weight: bold;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .logs-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .logs-controls {
+    justify-content: space-between;
+  }
+  
+  .log-item {
+    grid-template-columns: 1fr;
+    gap: 5px;
+    padding: 15px;
+  }
+  
+  .log-item::before {
+    content: attr(data-label);
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 2px;
+  }
+  
+  .log-time::before { content: "시간: "; }
+  .log-method::before { content: "메서드: "; }
+  .log-path::before { content: "경로: "; }
+  .log-status::before { content: "상태: "; }
+  .log-latency::before { content: "응답시간: "; }
+  .log-ip::before { content: "IP: "; }
+  
+  .logs-footer {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+} 
