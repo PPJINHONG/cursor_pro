@@ -2,13 +2,16 @@ version: '3.9'
 
 services:
   target-server:
-    build: .
+    build:
+      context: .
     container_name: target-server
     ports:
       - "8081:8081"
+    volumes:
+      - ../log:/var/log  
     networks:
       - lognet
 
 networks:
   lognet:
-  
+    external: true 

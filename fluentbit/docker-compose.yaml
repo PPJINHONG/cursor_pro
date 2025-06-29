@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  fluentbit:
+    build:
+      context: .
+    container_name: fluentbit
+    volumes:
+      - ../log:/var/log       # target-server 로그 마운트
+    networks:
+      - lognet
+
+
+networks:
+  lognet:
+    external: true 

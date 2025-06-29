@@ -1,19 +1,19 @@
 from fastapi import FastAPI
-from routers import ingest, dashboard   
+from routers.ingest import router as ingest_router
+from routers.dashboard import router as stats_router
 from database import init_db
 import logging
-logger = logging.getLogger(__name__)
 
+logging.basicConfig(level=logging.INFO)
 app = FastAPI()
-
-app.include_router(ingest.router, prefix="/log")
-app.include_router(dashboard.router, prefix="/api")
 
 @app.on_event("startup")
 async def startup_event():
-    try:
-        await init_db()
-        logger.info("✅ Database initialized successfully.")
-    except Exception as e:
-        logger.error(f"❌ Failed to initialize DB: {e}")
-        raise
+    await init_db()
+    logging.info("✅ Database initialized successfully.")
+
+# 로그 수집 (/log/ingest) — ingest_router 에 이미 prefix="/log" 있음
+app.include_router(ingest_router)
+
+# 통계/대시보드 엔드포인트 (/api/…)
+app.include_router(stats_router, prefix="/api")

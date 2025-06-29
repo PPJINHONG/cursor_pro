@@ -1,8 +1,10 @@
+# simulate.py — 좀 더 깔끔하고 가볍게
 import time
 import random
-import requests
+import json
 from datetime import datetime
 
+# 시뮬레이션용 API 엔드포인트 리스트
 ENDPOINTS = [
     ("/api/user/list", "GET"),
     ("/api/user/create", "POST"),
@@ -11,30 +13,36 @@ ENDPOINTS = [
     ("/api/auth/login", "POST"),
 ]
 
-TARGET_API = "http://host.docker.internal:8000/log/ingest"  # FastAPI 수신 엔드포인트
+ACCESS_LOG_FILE = "/var/log/access.log"  # Fluent Bit이 tail할 위치
 
-def generate_log():
-    url, method = random.choice(ENDPOINTS)
-    latency = random.randint(20, 500)  # ms
-    status = random.choices([200, 200, 200, 404, 500], weights=[70, 10, 10, 5, 5])[0]
+def simulate_request():
+    path, method = random.choice(ENDPOINTS)
+
+    # 응답 지연(랜덤) 시뮬
+    start = time.time()
+    time.sleep(random.uniform(0.01, 0.5))
+    latency = int((time.time() - start) * 1000)
+    status = random.choices([200, 404, 500], weights=[80, 10, 10])[0]
+
+    # naive ISO 포맷 (타임존 정보 없이)
+    ts = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S")
+
     log = {
-        "timestamp": datetime.now().isoformat(),
-        "method": method,
-        "url": url,
-        "status": status,
-        "latency_ms": latency
+        "timestamp": ts,
+        "method":    method,
+        "path":      path,
+        "status":    status,
+        "latency_ms": latency,
+        "client_ip": "127.0.0.1"
     }
-    return log
 
-def send_log(log):
-    try:
-        response = requests.post(TARGET_API, json=log)
-        print(f"Sent: {log['method']} {log['url']} → {log['status']} [{log['latency_ms']}ms] / Resp: {response.status_code}")
-    except Exception as e:
-        print("❌ Failed to send log:", e)
+    with open(ACCESS_LOG_FILE, "a") as f:
+        f.write(json.dumps(log, ensure_ascii=False) + "\n")
+
+    print(f"[SIM] {method} {path} → {status} ({latency}ms)")
 
 if __name__ == "__main__":
+    # 무한 루프 대신 간단히 쓰고 싶으면 for문 사용해도 됩니다
     while True:
-        log = generate_log()
-        send_log(log)
-        time.sleep(random.uniform(0.2, 1.5))  # 0.2~1.5초 간격으로 전송
+        simulate_request()
+        time.sleep(random.uniform(0.3, 1.2))

@@ -1,9 +1,16 @@
-FROM python:3.10-slim
+FROM python:3.9-slim
 
 WORKDIR /app
+
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY app /app
+# 시뮬레이션 스크립트 복사
+COPY app/ /app/
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8081"]
+# 로그 디렉토리 보장
+RUN mkdir -p /var/log \
+ && touch /var/log/access.log
+
+# 시뮬레이터 실행
+CMD ["python", "simulate.py"]
