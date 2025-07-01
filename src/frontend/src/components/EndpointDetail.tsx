@@ -62,10 +62,7 @@ const EndpointDetail: React.FC<EndpointDetailProps> = ({ startTime, endTime, int
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [intervalType, startTime, endTime]);
 
-  const getInterval = () => {
-    if (intervalType === '1h' || intervalType === '1h+') return 5;
-    return 1;
-  };
+  const getInterval = () => 1;
 
   const loadEndpoints = async () => {
     setLoadingEndpoints(true);
@@ -110,6 +107,13 @@ const EndpointDetail: React.FC<EndpointDetailProps> = ({ startTime, endTime, int
     if (status >= 300) return '#ffaa00';
     return '#00aa00';
   };
+
+  // chartData: 0값을 null로 바꿔서 gap이 생기도록 가공
+  const chartData = endpointData ? endpointData.time_series.map(d => ({
+    ...d,
+    request_count: d.request_count === 0 ? null : d.request_count,
+    avg_latency: d.avg_latency === 0 ? null : d.avg_latency,
+  })) : [];
 
   return (
     <div className="endpoint-detail">
@@ -187,7 +191,7 @@ const EndpointDetail: React.FC<EndpointDetailProps> = ({ startTime, endTime, int
           <div className="chart-section">
             <h4>📈 주기별 요청 수 <span style={{fontSize:12, color:'#888'}}>({getInterval()}분 단위)</span></h4>
             <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={endpointData.time_series}>
+              <AreaChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis 
                   dataKey="timestamp" 
@@ -214,12 +218,11 @@ const EndpointDetail: React.FC<EndpointDetailProps> = ({ startTime, endTime, int
           <div className="chart-section">
             <h4>⏱️ 주기별 평균 응답시간 <span style={{fontSize:12, color:'#888'}}>({getInterval()}분 단위)</span></h4>
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={endpointData.time_series}>
+              <LineChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis 
-                  dataKey="timestamp" 
+                  dataKey="timestamp"
                   tickFormatter={formatTimestamp}
-                  interval="preserveStartEnd"
                 />
                 <YAxis />
                 <Tooltip 
@@ -232,6 +235,7 @@ const EndpointDetail: React.FC<EndpointDetailProps> = ({ startTime, endTime, int
                   stroke="#dc2626" 
                   strokeWidth={2}
                   dot={{ fill: '#dc2626', strokeWidth: 2, r: 4 }}
+                  connectNulls={false}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -297,4 +301,4 @@ const EndpointDetail: React.FC<EndpointDetailProps> = ({ startTime, endTime, int
   );
 };
 
-export default EndpointDetail; 
+export default EndpointDetail;

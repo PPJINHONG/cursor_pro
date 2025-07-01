@@ -10,13 +10,15 @@ import './Dashboard.css';
 
 const Dashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState('overview');
+  const now = new Date();
+  const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
   const [dateInput, setDateInput] = useState({
-    start: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16),
-    end: new Date().toISOString().slice(0, 16)
+    start: twoHoursAgo.toISOString().slice(0, 16),
+    end: now.toISOString().slice(0, 16)
   });
   const [dateRange, setDateRange] = useState({
-    start: dateInput.start,
-    end: dateInput.end
+    start: twoHoursAgo.toISOString().slice(0, 16),
+    end: now.toISOString().slice(0, 16)
   });
   const [intervalType, setIntervalType] = useState<'1h' | '30m' | '15m' | '5m' | '1h+'>('1h');
 
