@@ -1,90 +1,200 @@
 .dashboard {
-  min-height: 100vh;
-  background: #f5f5f5;
   padding: 20px;
-  width: 100%;
-  box-sizing: border-box;
+  max-width: 100%;
+  margin: 0 auto;
+  background-color: #f8fafc;
+  min-height: 100vh;
 }
 
 .dashboard-header {
   background: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  margin-bottom: 20px;
-  width: 100%;
-  box-sizing: border-box;
+  padding: 24px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
 }
 
 .dashboard-header h1 {
-  margin: 0 0 10px 0;
-  color: #333;
-  font-size: 24px;
-}
-
-.dashboard-header p {
-  margin: 0;
-  color: #666;
-  font-size: 14px;
+  margin: 0 0 16px 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #1f2937;
 }
 
 .date-controls {
   display: flex;
-  gap: 15px;
+  gap: 16px;
   align-items: center;
-  margin-top: 15px;
   flex-wrap: wrap;
 }
 
-.date-controls label {
+.date-input-group {
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  font-size: 14px;
-  color: #333;
+  gap: 4px;
 }
 
-.date-controls input {
+.date-input-group label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.date-input-group input {
   padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
   font-size: 14px;
+  background: white;
 }
 
+.date-input-group input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* 탭 네비게이션 */
+.tab-navigation {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  background: white;
+  padding: 8px;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+.tab-button {
+  padding: 12px 20px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+}
+
+.tab-button:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.tab-button.active {
+  background: #3b82f6;
+  color: white;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+.tab-button.active:hover {
+  background: #2563eb;
+}
+
+/* 탭 컨텐츠 */
+.tab-content {
+  min-height: 600px;
+}
+
+.dashboard-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.chart-container {
+  background: white;
+  border-radius: 12px;
+  padding: 12px 8px 8px 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  box-sizing: border-box;
+}
+
+.analysis-container {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+.realtime-container {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .dashboard {
+    padding: 12px;
+  }
+  
+  .dashboard-header {
+    padding: 16px;
+  }
+  
+  .dashboard-header h1 {
+    font-size: 24px;
+  }
+  
+  .date-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .tab-navigation {
+    flex-direction: column;
+  }
+  
+  .tab-button {
+    justify-content: center;
+  }
+  
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .chart-container,
+  .analysis-container,
+  .realtime-container {
+    padding: 16px;
+  }
+}
+
+/* 기존 스타일 유지 */
 .refresh-btn {
-  padding: 8px 16px;
-  background: #1890ff;
+  background: #3b82f6;
   color: white;
   border: none;
-  border-radius: 4px;
+  padding: 8px 16px;
+  border-radius: 6px;
   cursor: pointer;
   font-size: 14px;
+  font-weight: 500;
   transition: background-color 0.2s;
 }
 
 .refresh-btn:hover {
-  background: #40a9ff;
+  background: #2563eb;
 }
 
 .refresh-btn:disabled {
   background: #d9d9d9;
   cursor: not-allowed;
-}
-
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 20px;
-  width: 100%;
-}
-
-.chart-container {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  padding: 20px;
-  width: 100%;
-  box-sizing: border-box;
 }
 
 .chart-container h3 {
@@ -118,26 +228,19 @@
   font-size: 14px;
 }
 
-/* 반응형 디자인 */
-@media (max-width: 768px) {
-  .dashboard {
-    padding: 10px;
-  }
-  
-  .dashboard-header {
-    padding: 15px;
-  }
-  
-  .date-controls {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .chart-container {
-    padding: 15px;
-  }
-  
-  .chart-wrapper {
-    height: 300px;
-  }
+.recharts-wrapper {
+  font-size: 12px !important;
+}
+
+.recharts-cartesian-axis-tick-value {
+  font-size: 11px !important;
+  font-style: normal !important;
+}
+
+.recharts-legend-item-text {
+  font-size: 12px !important;
+}
+
+.recharts-tooltip-label {
+  font-size: 12px !important;
 } 

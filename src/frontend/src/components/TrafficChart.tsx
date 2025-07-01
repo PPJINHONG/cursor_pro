@@ -11,7 +11,12 @@ import {
 } from 'recharts';
 import { dashboardApi, TrafficData } from '../services/api';
 
-const TrafficChart: React.FC = () => {
+interface TrafficChartProps {
+  startDate: string;
+  endDate: string;
+}
+
+const TrafficChart: React.FC<TrafficChartProps> = ({ startDate, endDate }) => {
   const [data, setData] = useState<TrafficData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -21,20 +26,37 @@ const TrafficChart: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      const end = new Date();
-      const start = new Date();
-      start.setDate(start.getDate() - 3); // 최근 3일
+      console.log('TrafficChart: API 호출 시작', { 
+        start: startDate, 
+        end: endDate,
+        url: 'http://localhost:8000/api/stats/traffic'
+      });
+      
+      // 직접 fetch로 테스트
+      const testUrl = `http://localhost:8000/api/stats/traffic?start=${startDate}&end=${endDate}&interval=5`;
+      console.log('TrafficChart: 테스트 URL', testUrl);
       
       const trafficData = await dashboardApi.getTraffic(
-        start.toISOString(),
-        end.toISOString(),
-        5
+        startDate,
+        endDate,
+        1
       );
       
+      console.log('TrafficChart: API 응답 성공', trafficData);
       setData(trafficData);
     } catch (err) {
-      setError('트래픽 데이터를 불러오는데 실패했습니다.');
-      console.error('Traffic data fetch error:', err);
+      console.error('TrafficChart: API 호출 실패', err);
+      console.error('TrafficChart: 에러 타입', typeof err);
+      console.error('TrafficChart: 에러 객체', err);
+      
+      let errorMessage = '트래픽 데이터를 불러오는데 실패했습니다';
+      if (err instanceof Error) {
+        errorMessage += `: ${err.message}`;
+      } else if (typeof err === 'object' && err !== null) {
+        errorMessage += `: ${JSON.stringify(err)}`;
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -42,7 +64,7 @@ const TrafficChart: React.FC = () => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [startDate, endDate]);
 
   const formatTime = (timestamp: string) => {
     return new Date(timestamp).toLocaleString('ko-KR', {
@@ -68,20 +90,22 @@ const TrafficChart: React.FC = () => {
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis 
-              dataKey="timestamp" 
-              tickFormatter={formatTime}
-              angle={-45}
-              textAnchor="end"
-              height={80}
-              interval="preserveStartEnd"
+            <XAxis
+              dataKey="timestamp"
+              tickFormatter={(value: string) => {
+                const date = new Date(value);
+                const h = date.getHours().toString().padStart(2, '0');
+                const m = date.getMinutes().toString().padStart(2, '0');
+                return `${h}:${m}`;
+              }}
+              tick={{ fontSize: 11, fontStyle: 'normal' }}
             />
-            <YAxis />
+            <YAxis tick={{ fontSize: 11 }} />
             <Tooltip 
               labelFormatter={formatTime}
               formatter={(value: number) => [`${value}건`, '요청 수']}
             />
-            <Legend />
+            <Legend wrapperStyle={{ fontSize: 12 }} />
             <Line 
               type="monotone" 
               dataKey="count" 
@@ -95,22 +119,32 @@ const TrafficChart: React.FC = () => {
       </div>
       
       {/* 요약 통계 */}
-      <div className="chart-summary">
-        <div className="summary-item">
-          <span className="label">총 요청:</span>
-          <span className="value">{data.reduce((sum, item) => sum + item.count, 0).toLocaleString()}건</span>
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', 
+        gap: '15px', 
+        marginTop: '20px',
+        padding: '15px',
+        background: '#f8f9fa',
+        borderRadius: '4px'
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '12px', color: '#666', marginBottom: '5px' }}>총 요청</div>
+          <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#333' }}>
+            {data.reduce((sum, item) => sum + item.count, 0).toLocaleString()}건
+          </div>
         </div>
-        <div className="summary-item">
-          <span className="label">평균 요청:</span>
-          <span className="value">
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '12px', color: '#666', marginBottom: '5px' }}>평균 요청</div>
+          <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#333' }}>
             {data.length > 0 ? (data.reduce((sum, item) => sum + item.count, 0) / data.length).toFixed(1) : 0}건/시간
-          </span>
+          </div>
         </div>
-        <div className="summary-item">
-          <span className="label">최대 요청:</span>
-          <span className="value">
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '12px', color: '#666', marginBottom: '5px' }}>최대 요청</div>
+          <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#333' }}>
             {data.length > 0 ? Math.max(...data.map(item => item.count)) : 0}건
-          </span>
+          </div>
         </div>
       </div>
     </div>

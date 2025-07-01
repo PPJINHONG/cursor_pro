@@ -9,11 +9,17 @@ import {
   ResponsiveContainer,
   Legend,
   ComposedChart,
-  Line
+  Line,
+  LabelList
 } from 'recharts';
 import { dashboardApi, BottleneckData } from '../services/api';
 
-const BottleneckChart: React.FC = () => {
+interface BottleneckChartProps {
+  startDate: string;
+  endDate: string;
+}
+
+const BottleneckChart: React.FC<BottleneckChartProps> = ({ startDate, endDate }) => {
   const [data, setData] = useState<BottleneckData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -23,13 +29,9 @@ const BottleneckChart: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      const end = new Date();
-      const start = new Date();
-      start.setDate(start.getDate() - 3); // 최근 3일
-      
       const bottleneckData = await dashboardApi.getBottlenecks(
-        start.toISOString(),
-        end.toISOString(),
+        startDate,
+        endDate,
         10
       );
       
@@ -44,7 +46,7 @@ const BottleneckChart: React.FC = () => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [startDate, endDate]);
 
   const formatPath = (path: string) => {
     if (path.length > 25) {
@@ -88,27 +90,54 @@ const BottleneckChart: React.FC = () => {
     <div className="chart-container">
       <h3>성능 병목 분석</h3>
       <div className="chart-wrapper">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 80 }}>
-            <CartesianGrid strokeDasharray="3 3" />
+        <ResponsiveContainer width="100%" height={320}>
+          <BarChart
+            data={data}
+            margin={{ top: 20, right: 30, left: 10, bottom: 20 }}
+            barCategoryGap={"20%"}
+            barGap={2}
+          >
+            <CartesianGrid strokeDasharray="3 3" vertical={false} />
             <XAxis 
-              dataKey="path" 
-              tickFormatter={formatPath}
-              angle={-45}
-              textAnchor="end"
-              height={80}
+              dataKey="path"
+              tick={false}
+              axisLine={false}
               interval={0}
+              height={40}
             />
-            <YAxis />
-            <Tooltip 
-              formatter={(value: number, name: string) => [
-                `${value}ms`, 
-                name === 'avg_ms' ? '평균 응답시간' : 'P90 응답시간'
-              ]}
-              labelFormatter={formatPath}
-            />
-            <Bar dataKey="avg_ms" fill="#1890ff" name="평균 응답시간" />
-            <Bar dataKey="p90_ms" fill="#faad14" name="P90 응답시간" />
+            <YAxis tick={{ fontSize: 12 }} />
+            <Tooltip formatter={(v: number) => `${v.toFixed(1)} ms`} />
+            <Bar dataKey="avg_ms" fill="#2563eb" radius={[4, 4, 0, 0]} maxBarSize={32}>
+              <LabelList 
+                dataKey="avg_ms"
+                position="top"
+                content={({ x, y, width, height, value, index }) => {
+                  if (
+                    typeof x === 'number' &&
+                    typeof y === 'number' &&
+                    typeof width === 'number' &&
+                    typeof height === 'number' &&
+                    typeof index === 'number' &&
+                    data && data[index]
+                  ) {
+                    const entry = data[index];
+                    return (
+                      <g>
+                        {/* ms value above bar */}
+                        <text x={x + width / 2} y={y - 8} textAnchor="middle" fontSize={12} fill="#222" fontFamily="monospace">
+                          {Math.round(value as number)}ms
+                        </text>
+                        {/* endpoint below bar */}
+                        <text x={x + width / 2} y={y + height + 16} textAnchor="middle" fontSize={12} fill="#666" fontFamily="monospace">
+                          {entry.path}
+                        </text>
+                      </g>
+                    );
+                  }
+                  return null;
+                }}
+              />
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -136,8 +165,6 @@ const BottleneckChart: React.FC = () => {
         }}>
           <div>API 경로</div>
           <div style={{ textAlign: 'center' }}>평균 (ms)</div>
-          <div style={{ textAlign: 'center' }}>P90 (ms)</div>
-          <div style={{ textAlign: 'center' }}>등급</div>
         </div>
         {data.map((item, index) => {
           const grade = getPerformanceGrade(item.avg_ms);
@@ -159,17 +186,6 @@ const BottleneckChart: React.FC = () => {
               </div>
               <div style={{ textAlign: 'center', fontWeight: 'bold', color: '#666' }}>
                 {Math.round(item.avg_ms)}ms
-              </div>
-              <div style={{ textAlign: 'center', fontWeight: 'bold', color: '#666' }}>
-                {Math.round(item.p90_ms)}ms
-              </div>
-              <div style={{ 
-                textAlign: 'center', 
-                fontWeight: 'bold', 
-                fontSize: '16px',
-                color: getGradeColor(grade)
-              }}>
-                {grade}
               </div>
             </div>
           );

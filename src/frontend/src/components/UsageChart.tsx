@@ -9,11 +9,17 @@ import {
   ResponsiveContainer,
   Legend,
   ComposedChart,
-  Line
+  Line,
+  LineChart
 } from 'recharts';
 import { dashboardApi, UsageData } from '../services/api';
 
-const UsageChart: React.FC = () => {
+interface UsageChartProps {
+  startDate: string;
+  endDate: string;
+}
+
+const UsageChart: React.FC<UsageChartProps> = ({ startDate, endDate }) => {
   const [data, setData] = useState<UsageData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -24,13 +30,9 @@ const UsageChart: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      const end = new Date();
-      const start = new Date();
-      start.setDate(start.getDate() - 3); // 최근 3일
-      
       const usageData = await dashboardApi.getUsage(
-        start.toISOString(),
-        end.toISOString()
+        startDate,
+        endDate
       );
       
       setData(usageData.slice(0, 10)); // 상위 10개만 표시
@@ -44,7 +46,7 @@ const UsageChart: React.FC = () => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [startDate, endDate]);
 
   const formatPath = (path: string) => {
     if (path.length > 20) {
@@ -108,7 +110,7 @@ const UsageChart: React.FC = () => {
                 height={80}
                 interval={0}
               />
-              <YAxis />
+              <YAxis tick={{ fontSize: 11 }} />
               <Tooltip 
                 formatter={(value: number, name: string) => [
                   name === 'count' ? `${value}건` : `${value}ms`,
@@ -121,15 +123,21 @@ const UsageChart: React.FC = () => {
           ) : (
             <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 80 }}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="path" 
-                tickFormatter={formatPath}
-                angle={-45}
-                textAnchor="end"
-                height={80}
-                interval={0}
+              <XAxis
+                dataKey="timestamp"
+                tickFormatter={(value: string) => {
+                  const date = new Date(value);
+                  const h = date.getHours().toString().padStart(2, '0');
+                  const m = date.getMinutes().toString().padStart(2, '0');
+                  const s = date.getSeconds().toString().padStart(2, '0');
+                  if (m === '00' && s === '00') {
+                    return `${h}:${m}:${s}`;
+                  }
+                  return `${m}:${s}`;
+                }}
+                tick={{ fontSize: 11, fontStyle: 'normal' }}
               />
-              <YAxis />
+              <YAxis tick={{ fontSize: 11 }} />
               <Tooltip 
                 formatter={(value: number, name: string) => [
                   name === 'count' ? `${value}건` : `${value}ms`,

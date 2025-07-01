@@ -9,7 +9,12 @@ import {
 } from 'recharts';
 import { dashboardApi, ErrorData } from '../services/api';
 
-const ErrorChart: React.FC = () => {
+interface ErrorChartProps {
+  startDate: string;
+  endDate: string;
+}
+
+const ErrorChart: React.FC<ErrorChartProps> = ({ startDate, endDate }) => {
   const [data, setData] = useState<ErrorData>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -19,13 +24,9 @@ const ErrorChart: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      const end = new Date();
-      const start = new Date();
-      start.setDate(start.getDate() - 3); // 최근 3일
-      
       const errorData = await dashboardApi.getErrors(
-        start.toISOString(),
-        end.toISOString()
+        startDate,
+        endDate
       );
       
       setData(errorData);
@@ -39,7 +40,7 @@ const ErrorChart: React.FC = () => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [startDate, endDate]);
 
   const COLORS = ['#52c41a', '#1890ff', '#faad14', '#f5222d', '#722ed1'];
 
@@ -73,7 +74,7 @@ const ErrorChart: React.FC = () => {
               cx="50%"
               cy="50%"
               labelLine={false}
-              label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+              label={({ name, percent }) => `${name}: ${percent ? (percent * 100).toFixed(0) : 0}%`}
               outerRadius={120}
               fill="#8884d8"
               dataKey="value"
