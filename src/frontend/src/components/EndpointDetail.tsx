@@ -42,6 +42,20 @@ const EndpointDetail: React.FC<EndpointDetailProps> = ({ startTime, endTime, int
     loadEndpoints();
   }, [startTime, endTime]);
 
+  // 엔드포인트 목록이 변경될 때 기본 선택 로직 추가
+  useEffect(() => {
+    if (filteredEndpoints.length > 0 && !selectedEndpoint) {
+      // '/api/auth/login'이 있으면 그것을, 없으면 첫 번째 엔드포인트 선택
+      const loginEndpoint = filteredEndpoints.find(e => e.path === '/api/auth/login');
+      if (loginEndpoint) {
+        handleEndpointSelect(loginEndpoint.path);
+      } else {
+        handleEndpointSelect(filteredEndpoints[0].path);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filteredEndpoints]);
+
   // 검색어에 따른 필터링
   useEffect(() => {
     if (searchTerm.trim() === '') {

@@ -6,7 +6,10 @@ import BottleneckChart from './BottleneckChart';
 import RealTimeLogs from './RealTimeLogs';
 import PatternAnalysis from './PatternAnalysis';
 import EndpointDetail from './EndpointDetail';
+import AIInsights from './AIInsights';
 import './Dashboard.css';
+
+const COMPANY_NAME = 'SOLOMONTECH';
 
 const Dashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -21,12 +24,17 @@ const Dashboard: React.FC = () => {
     end: now.toISOString().slice(0, 16)
   });
   const [intervalType, setIntervalType] = useState<'1h' | '30m' | '15m' | '5m' | '1h+'>('1h');
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [aiResult, setAiResult] = useState<any>(null);
+  const [aiPrompt, setAiPrompt] = useState<string | null>(null);
 
   const tabs = [
-    { id: 'overview', name: '개요' },
-    { id: 'patterns', name: '패턴 분석' },
-    { id: 'endpoint', name: '엔드포인트 분석' },
-    { id: 'realtime', name: '실시간 로그' }
+    { id: 'overview', name: 'Overview' },
+    { id: 'patterns', name: 'Pattern Analysis' },
+    { id: 'ai', name: 'AI Insights' },
+    { id: 'endpoint', name: 'Endpoint Analysis' },
+    { id: 'realtime', name: 'Realtime Logs' },
   ];
 
   const handleDateInputChange = (field: 'start' | 'end', value: string) => {
@@ -45,8 +53,9 @@ const Dashboard: React.FC = () => {
   };
 
   const handleQuickRange = (minutes: number) => {
-    const end = new Date();
-    const start = new Date(end.getTime() - minutes * 60 * 1000);
+    const now = new Date();
+    const end = new Date(now.getTime() - 2 * 60 * 1000); // 2분 전
+    const start = new Date(now.getTime() - (minutes + 2) * 60 * 1000); // (minutes+2)분 전
     setDateInput({
       start: start.toISOString().slice(0, 16),
       end: end.toISOString().slice(0, 16)
@@ -61,13 +70,37 @@ const Dashboard: React.FC = () => {
     else setIntervalType('5m');
   };
 
+  const handleAIAnalyze = async () => {
+    setAiLoading(true);
+    setAiError(null);
+    setAiResult(null);
+    setAiPrompt(null);
+    try {
+      const res = await fetch('/api/stats/ai/analyze', { method: 'POST' });
+      const data = await res.json();
+      if (data.error) {
+        setAiError(data.error);
+      } else {
+        setAiResult(data.ai_result);
+        setAiPrompt(data.prompt);
+      }
+    } catch (e: any) {
+      setAiError(e.message || 'AI 분석 요청 실패');
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   return (
     <div className="dashboard">
+      <div className="dashboard-topbar">
+        <div className="company-name">{COMPANY_NAME}</div>
+      </div>
       <div className="dashboard-header">
-        <h1>📈 로그 분석 대시보드</h1>
+        <h1>서버 로그 데이터 분석</h1>
         <div className="date-controls">
           <div className="date-input-group">
-            <label>시작일:</label>
+            <label>Start:</label>
             <input
               type="datetime-local"
               value={dateInput.start}
@@ -75,7 +108,7 @@ const Dashboard: React.FC = () => {
             />
           </div>
           <div className="date-input-group">
-            <label>종료일:</label>
+            <label>End:</label>
             <input
               type="datetime-local"
               value={dateInput.end}
@@ -83,13 +116,13 @@ const Dashboard: React.FC = () => {
             />
           </div>
           <button className="refresh-btn" style={{ marginLeft: 8 }} onClick={handleApply}>
-            적용
+            Apply
           </button>
           <div style={{ display: 'flex', gap: 4, marginLeft: 12 }}>
-            <button className="refresh-btn" style={{ background: '#e0e7ef', color: '#1e293b' }} onClick={() => handleQuickRange(60)}>최근 1시간</button>
-            <button className="refresh-btn" style={{ background: '#e0e7ef', color: '#1e293b' }} onClick={() => handleQuickRange(30)}>30분</button>
-            <button className="refresh-btn" style={{ background: '#e0e7ef', color: '#1e293b' }} onClick={() => handleQuickRange(15)}>15분</button>
-            <button className="refresh-btn" style={{ background: '#e0e7ef', color: '#1e293b' }} onClick={() => handleQuickRange(5)}>5분</button>
+            <button className="refresh-btn" style={{ background: '#e0e7ef', color: '#1e293b' }} onClick={() => handleQuickRange(60)}>Last 1h</button>
+            <button className="refresh-btn" style={{ background: '#e0e7ef', color: '#1e293b' }} onClick={() => handleQuickRange(30)}>30m</button>
+            <button className="refresh-btn" style={{ background: '#e0e7ef', color: '#1e293b' }} onClick={() => handleQuickRange(15)}>15m</button>
+            <button className="refresh-btn" style={{ background: '#e0e7ef', color: '#1e293b' }} onClick={() => handleQuickRange(5)}>5m</button>
           </div>
         </div>
       </div>
@@ -126,6 +159,12 @@ const Dashboard: React.FC = () => {
         {activeTab === 'patterns' && (
           <div className="analysis-container">
             <PatternAnalysis startDate={dateRange.start} endDate={dateRange.end} intervalType={intervalType} />
+          </div>
+        )}
+
+        {activeTab === 'ai' && (
+          <div className="analysis-container">
+            <AIInsights />
           </div>
         )}
 

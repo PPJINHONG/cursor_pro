@@ -1,52 +1,72 @@
 .dashboard {
-  padding: 20px;
+  padding: 0;
   max-width: 100%;
   margin: 0 auto;
   background-color: #f8fafc;
   min-height: 100vh;
+  font-family: 'Apple SD Gothic Neo', 'Segoe UI', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', Arial, sans-serif;
+  color: #1e293b;
+}
+
+.dashboard-topbar {
+  width: 100%;
+  background: #1e293b;
+  color: #fff;
+  padding: 0 0 0 32px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  border-bottom: 1.5px solid #111827;
+}
+
+.company-name {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: #fff;
+  font-family: inherit;
 }
 
 .dashboard-header {
-  background: white;
-  padding: 24px;
-  border-radius: 12px;
-  margin-bottom: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e5e7eb;
+  background: #fff;
+  padding: 20px 32px 20px 32px;
+  border-radius: 0 0 12px 12px;
+  margin-bottom: 18px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.07);
+  border: none;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .dashboard-header h1 {
-  margin: 0 0 16px 0;
-  font-size: 28px;
+  margin: 0 0 10px 0;
+  font-size: 22px;
   font-weight: 700;
-  color: #1f2937;
+  color: #1e293b;
+  letter-spacing: 1px;
 }
 
 .date-controls {
   display: flex;
-  gap: 16px;
+  gap: 12px;
   align-items: center;
   flex-wrap: wrap;
 }
 
-.date-input-group {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
 .date-input-group label {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
-  color: #374151;
+  color: #1e293b;
 }
 
 .date-input-group input {
-  padding: 8px 12px;
+  padding: 6px 10px;
   border: 1px solid #d1d5db;
   border-radius: 6px;
-  font-size: 14px;
-  background: white;
+  font-size: 13px;
+  background: #fff;
 }
 
 .date-input-group input:focus {
@@ -58,61 +78,62 @@
 /* 탭 네비게이션 */
 .tab-navigation {
   display: flex;
-  gap: 8px;
-  margin-bottom: 24px;
-  background: white;
-  padding: 8px;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e5e7eb;
+  gap: 4px;
+  margin-bottom: 18px;
+  background: #fff;
+  padding: 0 0 0 32px;
+  border-radius: 0;
+  box-shadow: none;
+  border: none;
+  border-bottom: 1.5px solid #e5e7eb;
+  height: 44px;
+  align-items: flex-end;
 }
 
 .tab-button {
-  padding: 12px 20px;
+  padding: 8px 24px 8px 24px;
   border: none;
   background: transparent;
-  border-radius: 8px;
+  border-radius: 8px 8px 0 0;
   font-size: 14px;
-  font-weight: 500;
-  color: #6b7280;
+  font-weight: 600;
+  color: #1e293b;
   cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-}
-
-.tab-button:hover {
-  background: #f3f4f6;
-  color: #374151;
+  transition: all 0.2s;
+  margin-bottom: -2px;
+  border-bottom: 2.5px solid transparent;
 }
 
 .tab-button.active {
-  background: #3b82f6;
-  color: white;
-  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+  background: #1e293b;
+  color: #fff;
+  border-bottom: 2.5px solid #1e293b;
+  box-shadow: 0 2px 4px rgba(30,41,59,0.07);
 }
 
-.tab-button.active:hover {
-  background: #2563eb;
+.tab-button:hover {
+  background: #e0e7ef;
+  color: #1e293b;
 }
 
 /* 탭 컨텐츠 */
 .tab-content {
   min-height: 600px;
+  padding: 0 32px 32px 32px;
 }
 
 .dashboard-grid {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  margin-bottom: 24px;
+  gap: 12px;
+  margin-bottom: 18px;
 }
 
 .chart-container {
-  background: white;
+  background: #fff;
   border-radius: 12px;
-  padding: 12px 8px 8px 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 10px 8px 8px 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.07);
   border: 1px solid #e5e7eb;
   width: 100%;
   min-width: 0;
@@ -120,76 +141,40 @@
   box-sizing: border-box;
 }
 
-.analysis-container {
-  background: white;
+.analysis-container, .realtime-container {
+  background: #fff;
   border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e5e7eb;
-}
-
-.realtime-container {
-  background: white;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.07);
   border: 1px solid #e5e7eb;
 }
 
 /* 반응형 디자인 */
-@media (max-width: 768px) {
-  .dashboard {
-    padding: 12px;
+@media (max-width: 900px) {
+  .dashboard-topbar, .dashboard-header, .tab-content {
+    padding-left: 12px;
+    padding-right: 12px;
   }
-  
-  .dashboard-header {
-    padding: 16px;
-  }
-  
-  .dashboard-header h1 {
-    font-size: 24px;
-  }
-  
-  .date-controls {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
   .tab-navigation {
-    flex-direction: column;
-  }
-  
-  .tab-button {
-    justify-content: center;
-  }
-  
-  .dashboard-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-  
-  .chart-container,
-  .analysis-container,
-  .realtime-container {
-    padding: 16px;
+    padding-left: 12px;
   }
 }
 
 /* 기존 스타일 유지 */
 .refresh-btn {
-  background: #3b82f6;
-  color: white;
+  background: #1e293b;
+  color: #fff;
   border: none;
-  padding: 8px 16px;
+  padding: 7px 14px;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 600;
   transition: background-color 0.2s;
 }
 
 .refresh-btn:hover {
-  background: #2563eb;
+  background: #111827;
 }
 
 .refresh-btn:disabled {
@@ -198,49 +183,22 @@
 }
 
 .chart-container h3 {
-  margin: 0 0 20px 0;
-  color: #333;
-  font-size: 18px;
+  margin: 0 0 16px 0;
+  color: #1e293b;
+  font-size: 15px;
   font-weight: 600;
 }
 
-.chart-wrapper {
-  width: 100%;
-  height: 400px;
-  position: relative;
-}
-
-.loading {
+.loading, .error {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 200px;
-  color: #666;
-  font-size: 14px;
+  height: 180px;
+  color: #6b7280;
+  font-size: 13px;
 }
 
-.error {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 200px;
-  color: #f5222d;
-  font-size: 14px;
-}
-
-.recharts-wrapper {
-  font-size: 12px !important;
-}
-
-.recharts-cartesian-axis-tick-value {
+.recharts-wrapper, .recharts-cartesian-axis-tick-value, .recharts-legend-item-text, .recharts-tooltip-label {
   font-size: 11px !important;
-  font-style: normal !important;
-}
-
-.recharts-legend-item-text {
-  font-size: 12px !important;
-}
-
-.recharts-tooltip-label {
-  font-size: 12px !important;
+  font-family: inherit !important;
 } 

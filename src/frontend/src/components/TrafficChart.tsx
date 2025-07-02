@@ -86,7 +86,7 @@ const TrafficChart: React.FC<TrafficChartProps> = ({ startDate, endDate }) => {
   return (
     <div className="chart-container">
       <h3>트래픽 분포</h3>
-      <div className="chart-wrapper">
+      <div className="chart-wrapper" style={{ height: 260 }}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" />

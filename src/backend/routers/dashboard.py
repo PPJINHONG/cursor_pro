@@ -1,13 +1,16 @@
-from fastapi import APIRouter, Depends, Query, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, Query, WebSocket, WebSocketDisconnect, Body
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, text, case
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
 from database import AsyncSessionLocal
 from models import LogEntry
+import os
+import hashlib
+import json
+import openai
 
 router = APIRouter(prefix="/stats")
-
 
 async def get_db():
     async with AsyncSessionLocal() as session:
@@ -190,7 +193,7 @@ async def analyze_patterns(
         insights.append({
             "type": "peak_traffic",
             "title": "피크 시간대 분석",
-            "description": f"오후 {peak_hour.hour}시에 트래픽이 최고조를 보이며, 오후 {off_peak_hour.hour}시 대비 {peak_ratio:.1f}배 높습니다.",
+            "description": f"오후 {peak_hour.hour if hasattr(peak_hour, 'hour') else '-'}시에 트래픽이 최고조를 보이며, 오후 {off_peak_hour.hour if hasattr(off_peak_hour, 'hour') else '-'}시 대비 {peak_ratio:.1f}배 높습니다.",
             "recommendation": "피크 시간대에 서버 리소스를 확장하거나 로드 밸런싱을 고려하세요.",
             "severity": "medium"
         })
@@ -204,7 +207,7 @@ async def analyze_patterns(
         insights.append({
             "type": "high_error_rate",
             "title": "높은 에러율 감지",
-            "description": f"전체 에러율이 {error_rate:.1f}%로 높은 수준입니다.",
+            "description": f"전체 에러율이 {float(error_rate) if error_rate is not None else 0.0:.1f}%로 높은 수준입니다.",
             "recommendation": "에러 로그를 분석하여 근본 원인을 파악하고 수정하세요.",
             "severity": "high"
         })
@@ -215,7 +218,7 @@ async def analyze_patterns(
         insights.append({
             "type": "slow_response",
             "title": "느린 응답시간",
-            "description": f"평균 응답시간이 {avg_latency:.0f}ms로 느린 수준입니다.",
+            "description": f"평균 응답시간이 {float(avg_latency) if avg_latency is not None else 0.0:.0f}ms로 느린 수준입니다.",
             "recommendation": "데이터베이스 쿼리 최적화나 캐싱 전략을 검토하세요.",
             "severity": "medium"
         })
@@ -225,7 +228,7 @@ async def analyze_patterns(
             {
                 "hour": int(row.hour),
                 "count": row.count,
-                "avg_latency": float(row.avg_latency) if row.avg_latency else 0,
+                "avg_latency": float(row.avg_latency) if row.avg_latency is not None else 0.0,
                 "error_count": row.error_count
             } for row in hourly_data
         ],
@@ -233,17 +236,17 @@ async def analyze_patterns(
             {
                 "day_of_week": int(row.day_of_week),
                 "count": row.count,
-                "avg_latency": float(row.avg_latency) if row.avg_latency else 0
+                "avg_latency": float(row.avg_latency) if row.avg_latency is not None else 0.0
             } for row in daily_data
         ],
         "insights": insights,
         "summary": {
             "total_requests": total_requests,
             "total_errors": total_errors,
-            "error_rate": error_rate,
-            "avg_latency": avg_latency,
-            "peak_hour": peak_hour.hour if peak_hour else None,
-            "off_peak_hour": off_peak_hour.hour if off_peak_hour else None
+            "error_rate": float(error_rate) if error_rate is not None else 0.0,
+            "avg_latency": float(avg_latency) if avg_latency is not None else 0.0,
+            "peak_hour": peak_hour.hour if hasattr(peak_hour, 'hour') else '-',
+            "off_peak_hour": off_peak_hour.hour if hasattr(off_peak_hour, 'hour') else '-'
         }
     }
 
@@ -301,7 +304,7 @@ async def detect_anomalies(
                 "type": "traffic_spike" if row.count > mean_count else "traffic_drop",
                 "description": f"트래픽이 평균 대비 {abs(row.count - mean_count) / std_count:.1f}σ {'증가' if row.count > mean_count else '감소'}",
                 "value": row.count,
-                "expected": f"{mean_count:.1f} ± {std_count:.1f}"
+                "expected": f"{float(mean_count) if mean_count is not None else 0.0:.1f} ± {float(std_count) if std_count is not None else 0.0:.1f}"
             })
         
         # 응답시간 이상치
@@ -309,8 +312,8 @@ async def detect_anomalies(
             interval_anomalies.append({
                 "type": "slow_response",
                 "description": f"응답시간이 평균 대비 {abs(row.avg_latency - mean_latency) / std_latency:.1f}σ 증가",
-                "value": f"{row.avg_latency:.0f}ms",
-                "expected": f"{mean_latency:.0f} ± {std_latency:.0f}ms"
+                "value": f"{float(row.avg_latency) if row.avg_latency is not None else 0.0:.0f}ms",
+                "expected": f"{float(mean_latency) if mean_latency is not None else 0.0:.0f} ± {float(std_latency) if std_latency is not None else 0.0:.0f}ms"
             })
         
         # 에러율 이상치
@@ -318,8 +321,8 @@ async def detect_anomalies(
         if error_rate > 10:  # 10% 이상 에러율
             interval_anomalies.append({
                 "type": "high_error_rate",
-                "description": f"에러율이 {error_rate:.1f}%로 높은 수준",
-                "value": f"{error_rate:.1f}%",
+                "description": f"에러율이 {float(error_rate) if error_rate is not None else 0.0:.1f}%로 높은 수준",
+                "value": f"{float(error_rate) if error_rate is not None else 0.0:.1f}%",
                 "expected": "< 5%"
             })
         
@@ -335,8 +338,8 @@ async def detect_anomalies(
             "total_intervals": len(interval_data),
             "anomaly_intervals": len(anomalies),
             "anomaly_rate": (len(anomalies) / len(interval_data) * 100) if interval_data else 0,
-            "mean_traffic": mean_count,
-            "mean_latency": mean_latency
+            "mean_traffic": float(mean_count) if mean_count is not None else 0.0,
+            "mean_latency": float(mean_latency) if mean_latency is not None else 0.0
         }
     }
 
@@ -387,7 +390,7 @@ async def get_recommendations(
     
     # 전체 성능 분석
     total_requests = stats.total_requests
-    avg_latency = float(stats.avg_latency) if stats.avg_latency else 0
+    avg_latency = float(stats.avg_latency) if stats.avg_latency is not None else 0.0
     error_rate = (stats.error_count / total_requests * 100) if total_requests > 0 else 0
     server_error_rate = (stats.server_error_count / total_requests * 100) if total_requests > 0 else 0
     
@@ -396,7 +399,7 @@ async def get_recommendations(
             "category": "performance",
             "priority": "high",
             "title": "응답시간 최적화 필요",
-            "description": f"평균 응답시간이 {avg_latency:.0f}ms로 느린 수준입니다.",
+            "description": f"평균 응답시간이 {float(avg_latency) if avg_latency is not None else 0.0:.0f}ms로 느린 수준입니다.",
             "actions": [
                 "데이터베이스 쿼리 최적화",
                 "캐싱 전략 도입",
@@ -411,7 +414,7 @@ async def get_recommendations(
             "category": "reliability",
             "priority": "high",
             "title": "에러율 개선 필요",
-            "description": f"전체 에러율이 {error_rate:.1f}%로 높은 수준입니다.",
+            "description": f"전체 에러율이 {float(error_rate) if error_rate is not None else 0.0:.1f}%로 높은 수준입니다.",
             "actions": [
                 "에러 로그 상세 분석",
                 "입력값 검증 강화",
@@ -426,7 +429,7 @@ async def get_recommendations(
             "category": "reliability",
             "priority": "critical",
             "title": "서버 에러 긴급 개선 필요",
-            "description": f"서버 에러율이 {server_error_rate:.1f}%로 심각한 수준입니다.",
+            "description": f"서버 에러율이 {float(server_error_rate) if server_error_rate is not None else 0.0:.1f}%로 심각한 수준입니다.",
             "actions": [
                 "즉시 서버 로그 분석",
                 "데이터베이스 연결 상태 확인",
@@ -463,9 +466,9 @@ async def get_recommendations(
         },
         "metrics": {
             "total_requests": total_requests,
-            "avg_latency": avg_latency,
-            "error_rate": error_rate,
-            "server_error_rate": server_error_rate
+            "avg_latency": float(avg_latency) if avg_latency is not None else 0.0,
+            "error_rate": float(error_rate) if error_rate is not None else 0.0,
+            "server_error_rate": float(server_error_rate) if server_error_rate is not None else 0.0
         }
     }
 
@@ -579,7 +582,7 @@ async def error_heatmap(
         heatmap.append({
             "interval": row.interval.isoformat(),
             "path": row.path,
-            "error_rate": error_rate
+            "error_rate": float(error_rate) if error_rate is not None else 0.0
         })
     return heatmap
 
@@ -623,21 +626,37 @@ async def endpoint_detail(
     end_naive = convert_to_naive_datetime(end)
     
     # interval 주기별 요청 수 및 평균 레이턴시
-    time_series_sql = text(f"""
-        SELECT
-          date_trunc('minute', timestamp)
-            + floor(date_part('minute', timestamp)/:interval)* :interval * interval '1 minute' AS bucket,
-          count(*) AS request_count,
-          avg(latency_ms) AS avg_latency,
-          sum(case when status >= 400 then 1 else 0 end) AS error_count,
-          sum(case when status < 400 then 1 else 0 end) AS success_count
-        FROM logs
-        WHERE path = :path 
-          AND timestamp BETWEEN :start AND :end
-        GROUP BY bucket
-        ORDER BY bucket
-    """)
-    
+    if interval == 1:
+        # 1분 단위 집계: 초/밀리초 무시, 정확히 1분 단위로만 group by
+        time_series_sql = text('''
+            SELECT
+              date_trunc('minute', timestamp) AS bucket,
+              count(*) AS request_count,
+              avg(latency_ms) AS avg_latency,
+              sum(case when status >= 400 then 1 else 0 end) AS error_count,
+              sum(case when status < 400 then 1 else 0 end) AS success_count
+            FROM logs
+            WHERE path = :path 
+              AND timestamp BETWEEN :start AND :end
+            GROUP BY bucket
+            ORDER BY bucket
+        ''')
+    else:
+        # interval>1: 기존 방식 유지
+        time_series_sql = text(f'''
+            SELECT
+              date_trunc('minute', timestamp)
+                + floor(date_part('minute', timestamp)/:interval)* :interval * interval '1 minute' AS bucket,
+              count(*) AS request_count,
+              avg(latency_ms) AS avg_latency,
+              sum(case when status >= 400 then 1 else 0 end) AS error_count,
+              sum(case when status < 400 then 1 else 0 end) AS success_count
+            FROM logs
+            WHERE path = :path 
+              AND timestamp BETWEEN :start AND :end
+            GROUP BY bucket
+            ORDER BY bucket
+        ''')
     time_series_result = await db.execute(
         time_series_sql, 
         {"path": path, "start": start_naive, "end": end_naive, "interval": interval}
@@ -646,7 +665,7 @@ async def endpoint_detail(
         {
             "timestamp": row.bucket,
             "request_count": row.request_count,
-            "avg_latency": float(row.avg_latency) if row.avg_latency else 0,
+            "avg_latency": float(row.avg_latency) if row.avg_latency is not None else 0.0,
             "error_count": row.error_count,
             "success_count": row.success_count,
             "error_rate": (row.error_count / row.request_count * 100) if row.request_count > 0 else 0
@@ -730,11 +749,11 @@ async def endpoint_detail(
     if summary_row:
         summary = {
             "total_requests": summary_row.total_requests,
-            "avg_latency": float(summary_row.avg_latency) if summary_row.avg_latency else 0,
-            "min_latency": float(summary_row.min_latency) if summary_row.min_latency else 0,
-            "max_latency": float(summary_row.max_latency) if summary_row.max_latency else 0,
-            "median_latency": float(summary_row.median_latency) if summary_row.median_latency else 0,
-            "p90_latency": float(summary_row.p90_latency) if summary_row.p90_latency else 0,
+            "avg_latency": float(summary_row.avg_latency) if summary_row.avg_latency is not None else 0.0,
+            "min_latency": float(summary_row.min_latency) if summary_row.min_latency is not None else 0.0,
+            "max_latency": float(summary_row.max_latency) if summary_row.max_latency is not None else 0.0,
+            "median_latency": float(summary_row.median_latency) if summary_row.median_latency is not None else 0.0,
+            "p90_latency": float(summary_row.p90_latency) if summary_row.p90_latency is not None else 0.0,
             "total_errors": summary_row.total_errors,
             "total_success": summary_row.total_success,
             "error_rate": (summary_row.total_errors / summary_row.total_requests * 100) if summary_row.total_requests > 0 else 0
@@ -778,3 +797,108 @@ async def get_endpoints(
     )
     result = await db.execute(stmt)
     return [{"path": row.path} for row in result]
+
+
+def safe_float(val, default=0.0):
+    try:
+        return float(val)
+    except (TypeError, ValueError):
+        return default
+
+def safe_int(val, default=0):
+    try:
+        return int(val)
+    except (TypeError, ValueError):
+        return default
+
+@router.post("/ai/analyze", summary="최근 5분 로그 AI 분석")
+async def ai_analyze(db: AsyncSession = Depends(get_db)):
+    """
+    최근 5분간 로그 통계를 OpenAI에 보내 분석 결과와 실제 프롬프트를 반환합니다.
+    """
+    # 1. 최근 5분간 로그 집계
+    end_time = datetime.now()
+    start_time = end_time - timedelta(minutes=5)
+    stmt = select(
+        func.count().label("total_requests"),
+        func.avg(LogEntry.latency_ms).label("avg_latency"),
+        func.sum(case((LogEntry.status >= 400, 1), else_=0)).label("error_count")
+    ).where(
+        LogEntry.timestamp >= start_time,
+        LogEntry.timestamp <= end_time
+    )
+    result = await db.execute(stmt)
+    stats = result.fetchone()
+    total_requests = safe_int(getattr(stats, 'total_requests', 0), 0)
+    error_count = safe_int(getattr(stats, 'error_count', 0), 0)
+    avg_latency = safe_float(getattr(stats, 'avg_latency', 0.0), 0.0)
+    error_rate = safe_float((error_count / total_requests * 100) if total_requests > 0 else 0.0, 0.0)
+
+    # 엔드포인트별 통계
+    endpoint_stmt = select(
+        LogEntry.path,
+        func.count().label("count"),
+        func.sum(case((LogEntry.status >= 400, 1), else_=0)).label("error_count")
+    ).where(
+        LogEntry.timestamp >= start_time,
+        LogEntry.timestamp <= end_time
+    ).group_by(LogEntry.path)
+    endpoint_result = await db.execute(endpoint_stmt)
+    endpoint_stats = []
+    for row in endpoint_result:
+        count = safe_int(getattr(row, 'count', 0), 0)
+        err = safe_int(getattr(row, 'error_count', 0), 0)
+        rate = safe_float((err / count * 100) if count > 0 else 0.0, 0.0)
+        endpoint_stats.append({
+            "path": str(getattr(row, 'path', '')),
+            "count": count,
+            "error_count": err,
+            "error_rate": rate
+        })
+    # 2. 프롬프트 생성 (한국어)
+    prompt = f"""
+아래는 최근 5분간의 로그 통계 데이터입니다.
+- 전체 요청 수: {safe_int(total_requests)}건
+- 전체 에러율: {safe_float(error_rate):.1f}%
+- 평균 응답시간: {safe_float(avg_latency):.0f}ms
+- 엔드포인트별 통계:
+{json.dumps(endpoint_stats, ensure_ascii=False, indent=2)}
+
+이 데이터를 바탕으로 다음을 분석해 주세요:
+1. 주요 문제점 및 인사이트
+2. 원인 추정
+3. 개선/권장 사항
+4. 에러율이 가장 높은 엔드포인트와 그 이유
+
+반드시 아래와 같은 JSON 형식으로만 답변하세요. 다른 텍스트는 절대 포함하지 마세요.
+{{
+  "insights": "문제점 및 인사이트 요약",
+  "root_cause": "가장 가능성 높은 원인",
+  "recommendation": "개선/권장 사항",
+  "worst_endpoint": "에러율이 가장 높은 엔드포인트와 그 이유"
+}}
+"""
+    # 3. OpenAI 호출
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        return {"error": "OPENAI_API_KEY 환경변수가 없습니다."}
+    openai.api_key = api_key
+    try:
+        response = await openai.ChatCompletion.acreate(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "로그 분석 전문가. 반드시 JSON만 응답."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=400,
+            temperature=0.1
+        )
+        ai_content = response.choices[0].message.content.strip()
+        # JSON 파싱 시도
+        try:
+            ai_result = json.loads(ai_content)
+        except Exception:
+            ai_result = {"raw": ai_content}
+        return {"ai_result": ai_result, "prompt": prompt}
+    except Exception as e:
+        return {"error": str(e), "prompt": prompt}
