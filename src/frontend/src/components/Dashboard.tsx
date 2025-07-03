@@ -7,6 +7,7 @@ import RealTimeLogs from './RealTimeLogs';
 import PatternAnalysis from './PatternAnalysis';
 import EndpointDetail from './EndpointDetail';
 import AIInsights from './AIInsights';
+import AIChatPrompt from './AIChatPrompt';
 import './Dashboard.css';
 
 const COMPANY_NAME = 'SOLOMONTECH';
@@ -164,6 +165,7 @@ const Dashboard: React.FC = () => {
 
         {activeTab === 'ai' && (
           <div className="analysis-container">
+            <AIChatPrompt />
             <AIInsights />
           </div>
         )}

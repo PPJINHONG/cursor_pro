@@ -153,7 +153,7 @@ const AIInsights: React.FC = () => {
 
   return (
     <div className="ai-insights-container">
-      <h2 className="ai-insights-title">AI Insights</h2>
+      <hr style={{ border: 'none', borderTop: '2px solid #e5e7eb', margin: '36px 0 32px 0' }} />
       <div style={{ marginBottom: 20 }}>
         <button
           onClick={handleAnalyze}

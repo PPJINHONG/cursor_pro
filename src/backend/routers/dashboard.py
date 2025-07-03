@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query, WebSocket, WebSocketDisconnect, Body
+from fastapi import APIRouter, Depends, Query, WebSocket, WebSocketDisconnect, Body, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, text, case
 from typing import List, Optional, Dict, Any
@@ -818,7 +818,7 @@ async def ai_analyze(db: AsyncSession = Depends(get_db)):
     """
     # 1. 최근 5분간 로그 집계
     end_time = datetime.now()
-    start_time = end_time - timedelta(minutes=5)
+    start_time = end_time - timedelta(minutes=30)
     stmt = select(
         func.count().label("total_requests"),
         func.avg(LogEntry.latency_ms).label("avg_latency"),
@@ -900,5 +900,160 @@ async def ai_analyze(db: AsyncSession = Depends(get_db)):
         except Exception:
             ai_result = {"raw": ai_content}
         return {"ai_result": ai_result, "prompt": prompt}
+    except Exception as e:
+        return {"error": str(e), "prompt": prompt}
+
+
+@router.post("/ai/chat", summary="AI 프롬프트 QnA (프로젝트 관련 질문만)")
+async def ai_chat(request: Request, db: AsyncSession = Depends(get_db)):
+    """
+    사용자가 입력한 프롬프트와 최근 5분간의 로그 통계(1분 단위 전체/엔드포인트별 타임시리즈 포함)를 OpenAI에 보내고, 답변을 반환합니다.
+    프로젝트 관련 질문(로그/엔드포인트/지연율/에러 등)은 실제 데이터 기반으로, 그 외는 자유롭게 답변.
+    """
+    data = await request.json()
+    user_prompt = data.get("prompt", "").strip()
+    if not user_prompt:
+        return {"error": "프롬프트가 비어 있습니다."}
+    # 최근 5분간 로그 통계 수집 (ai_analyze와 동일)
+    end_time = datetime.now()
+    start_time = end_time - timedelta(minutes=30)
+    stmt = select(
+        func.count().label("total_requests"),
+        func.avg(LogEntry.latency_ms).label("avg_latency"),
+        func.sum(case((LogEntry.status >= 400, 1), else_=0)).label("error_count")
+    ).where(
+        LogEntry.timestamp >= start_time,
+        LogEntry.timestamp <= end_time
+    )
+    result = await db.execute(stmt)
+    stats = result.fetchone()
+    total_requests = safe_int(getattr(stats, 'total_requests', 0), 0)
+    error_count = safe_int(getattr(stats, 'error_count', 0), 0)
+    avg_latency = safe_float(getattr(stats, 'avg_latency', 0.0), 0.0)
+    error_rate = safe_float((error_count / total_requests * 100) if total_requests > 0 else 0.0, 0.0)
+
+    endpoint_stmt = select(
+        LogEntry.path,
+        func.count().label("count"),
+        func.sum(case((LogEntry.status >= 400, 1), else_=0)).label("error_count")
+    ).where(
+        LogEntry.timestamp >= start_time,
+        LogEntry.timestamp <= end_time
+    ).group_by(LogEntry.path)
+    endpoint_result = await db.execute(endpoint_stmt)
+    endpoint_stats = []
+    for row in endpoint_result:
+        count = safe_int(getattr(row, 'count', 0), 0)
+        err = safe_int(getattr(row, 'error_count', 0), 0)
+        rate = safe_float((err / count * 100) if count > 0 else 0.0, 0.0)
+        endpoint_stats.append({
+            "path": str(getattr(row, 'path', '')),
+            "count": count,
+            "error_count": err,
+            "error_rate": rate
+        })
+    # 1분 단위 전체 타임시리즈 집계
+    time_series_stmt = select(
+        func.date_trunc(text("'minute'"), LogEntry.timestamp).label('minute'),
+        func.count().label('request_count'),
+        func.avg(LogEntry.latency_ms).label('avg_latency'),
+        func.sum(case((LogEntry.status >= 400, 1), else_=0)).label('error_count')
+    ).where(
+        LogEntry.timestamp >= start_time,
+        LogEntry.timestamp <= end_time
+    ).group_by(
+        func.date_trunc(text("'minute'"), LogEntry.timestamp)
+    ).order_by(
+        func.date_trunc(text("'minute'"), LogEntry.timestamp)
+    )
+    print("[DEBUG] time_series_stmt SQL:", str(time_series_stmt))
+    time_series_result = await db.execute(time_series_stmt)
+    time_series = []
+    for row in time_series_result.fetchall():
+        error_rate = (row.error_count / row.request_count * 100) if row.request_count > 0 else 0
+        time_series.append({
+            "timestamp": row.minute.isoformat(),
+            "request_count": row.request_count,
+            "avg_latency": float(row.avg_latency) if row.avg_latency is not None else 0.0,
+            "error_rate": error_rate
+        })
+    # 엔드포인트별 1분 단위 타임시리즈 집계
+    endpoint_time_series_stmt = select(
+        LogEntry.path,
+        func.date_trunc(text("'minute'"), LogEntry.timestamp).label('minute'),
+        func.count().label('request_count'),
+        func.avg(LogEntry.latency_ms).label('avg_latency'),
+        func.sum(case((LogEntry.status >= 400, 1), else_=0)).label('error_count')
+    ).where(
+        LogEntry.timestamp >= start_time,
+        LogEntry.timestamp <= end_time
+    ).group_by(
+        LogEntry.path,
+        func.date_trunc(text("'minute'"), LogEntry.timestamp)
+    ).order_by(
+        LogEntry.path,
+        func.date_trunc(text("'minute'"), LogEntry.timestamp)
+    )
+    print("[DEBUG] endpoint_time_series_stmt SQL:", str(endpoint_time_series_stmt))
+    endpoint_time_series_result = await db.execute(endpoint_time_series_stmt)
+    endpoint_time_series = {}
+    for row in endpoint_time_series_result.fetchall():
+        error_rate = (row.error_count / row.request_count * 100) if row.request_count > 0 else 0
+        path = str(getattr(row, 'path', ''))
+        if path not in endpoint_time_series:
+            endpoint_time_series[path] = []
+        endpoint_time_series[path].append({
+            "timestamp": row.minute.isoformat(),
+            "request_count": row.request_count,
+            "avg_latency": float(row.avg_latency) if row.avg_latency is not None else 0.0,
+            "error_rate": error_rate
+        })
+    # 프롬프트 생성: 최근 5분 통계 + 엔드포인트별 + 1분 단위 전체/엔드포인트별 타임시리즈 + 사용자 질문
+    prompt = f"""
+아래는 최근 5분간의 서버 로그 통계입니다.
+
+- 전체 요청 수: {safe_int(total_requests)}건
+- 전체 에러율: {safe_float(error_rate):.1f}%
+- 평균 응답시간: {safe_float(avg_latency):.0f}ms
+
+- 엔드포인트별 통계(endpoint_stats):
+{json.dumps(endpoint_stats, ensure_ascii=False, indent=2)}
+
+- 1분 단위 전체 통계(time_series):
+각 항목의 'timestamp'는 'YYYY-MM-DDTHH:MM:00' 형식이며, HH:MM이 실제 시간(분)입니다.
+{json.dumps(time_series, ensure_ascii=False, indent=2)}
+
+- 엔드포인트별 1분 단위 통계(endpoint_time_series):
+각 엔드포인트(path)별로, 각 분(timestamp)마다 요청수, 평균 응답시간, 에러율이 기록되어 있습니다.
+{json.dumps(endpoint_time_series, ensure_ascii=False, indent=2)}
+
+[지침]
+- 질문이 시간대별, 엔드포인트별, 또는 그 조합(예: '몇 시에 /api/login의 지연율이 높아?')이면 반드시 위 데이터에서 해당 조건에 맞는 timestamp(분)와 path(엔드포인트)를 찾아서 답변하세요.
+- 예시: "15:02에 /api/login 엔드포인트의 평균 응답시간이 400ms로 가장 높았습니다."
+- 그 외의 질문은 자유롭게 답변하세요.
+
+질문: {user_prompt}
+"""
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        return {"error": "OPENAI_API_KEY 환경변수가 없습니다."}
+    openai.api_key = api_key
+    system_prompt = (
+        "당신은 친절하고 유능한 AI 어시스턴트입니다. "
+        "서버/로그/엔드포인트/지연율/에러 등 프로젝트 관련 질문에는 반드시 위의 데이터만 참고해서 답변하세요. "
+        "그 외의 질문에는 자유롭게 답변하세요."
+    )
+    try:
+        response = await openai.ChatCompletion.acreate(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=900,
+            temperature=0.3
+        )
+        ai_content = response.choices[0].message.content.strip()
+        return {"result": ai_content, "prompt": prompt}
     except Exception as e:
         return {"error": str(e), "prompt": prompt}
