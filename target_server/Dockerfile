@@ -13,4 +13,4 @@ RUN mkdir -p /var/log \
  && touch /var/log/access.log
 
 # 시뮬레이터 실행
-CMD ["python", "simulate.py"]
+CMD ["python", "main.py"]

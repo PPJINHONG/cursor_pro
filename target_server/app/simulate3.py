@@ -1,10 +1,8 @@
-# simulate.py — 좀 더 깔끔하고 가볍게
 import time
 import random
 import json
 from datetime import datetime
 
-# 시뮬레이션용 API 엔드포인트 리스트
 ENDPOINTS = [
     ("/api/user/list", "GET"),
     ("/api/user/create", "POST"),
@@ -13,20 +11,19 @@ ENDPOINTS = [
     ("/api/auth/login", "POST"),
 ]
 
-ACCESS_LOG_FILE = "/var/log/access.log"  # Fluent Bit이 tail할 위치
+ACCESS_LOG_FILE = "/var/log/access.log"
 
 def simulate_request():
     path, method = random.choice(ENDPOINTS)
-
-    # 응답 지연(랜덤) 시뮬
     start = time.time()
     time.sleep(random.uniform(0.01, 0.5))
     latency = int((time.time() - start) * 1000)
-    status = random.choices([200, 404, 500], weights=[80, 10, 10])[0]
-
-    # naive ISO 포맷 (타임존 정보 없이)
     ts = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S")
-
+    # 특정 엔드포인트에서만 500이 많이 발생
+    if path in ["/api/order/checkout", "/api/auth/login"]:
+        status = random.choices([200, 404, 500], weights=[20, 10, 70])[0]  # 500이 70%
+    else:
+        status = random.choices([200, 404, 500], weights=[85, 10, 5])[0]   # 200이 85%
     log = {
         "timestamp": ts,
         "method":    method,
@@ -35,11 +32,9 @@ def simulate_request():
         "latency_ms": latency,
         "client_ip": "127.0.0.1"
     }
-
     with open(ACCESS_LOG_FILE, "a") as f:
         f.write(json.dumps(log, ensure_ascii=False) + "\n")
-
-    print(f"[SIM] {method} {path} → {status} ({latency}ms)")
+    print(f"[SIM3] {method} {path} → {status} ({latency}ms)")
 
 def run_simulation(n=1):
     for _ in range(n):
@@ -49,4 +44,4 @@ def run_simulation(n=1):
 if __name__ == "__main__":
     while True:
         simulate_request()
-        time.sleep(3)
+        time.sleep(3) 
