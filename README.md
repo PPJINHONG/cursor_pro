@@ -1,25 +1,5 @@
-🖥️ 주요 기능 페이지 구성
-메뉴 / 화면	주요 기능 설명
-📊 대시보드	5분 단위 분석 결과 표시 (트래픽 추이, 엔드포인트별 응답시간, 에러 비율 등)
-🔍 상세 분석 / 필터링	시간/엔드포인트/상태코드로 분석 결과 필터링
-🧱 병목 API 탐지	평균 응답시간 기준으로 느린 API 식별
-🕵️ 이상 요청 탐지	에러 과다 발생 API나 요청 급증 사용자 표시
-🖥️ 실시간 로그 스트림	로그 수집되는 내용을 콘솔처럼 스트리밍 표시 (WebSocket 활용)
+서버 로그 데이터 분석
+http://cursor-project.solomontech-cloud.kr/
 
-✅ 구축 순서 제안
- Fluent Bit 설치 → 로그 수집 테스트
-
- FastAPI로 수집 API (/log/ingest) 만들기
-
- PostgreSQL 연동 → 로그 저장
-
- 분석 스케줄러 만들기 (5분마다 pandas 분석)
-
- React + Plotly.js 기반 대시보드 화면 구성
-
- WebSocket 기반 로그 스트림 페이지 만들기
-
-✅ 정리된 한마디 요약
-당신의 플랫폼은
-"React + Plotly.js 프론트, FastAPI 백엔드, Fluent Bit 수집기" 구조로,
-로그 수집부터 분석, 대시보드, 실시간 스트림까지 올인원 웹 플랫폼을 구현하는 것입니다.
+로그 수집 대상 서버
+http://cursor-project.solomontech-cloud.kr:8081/
