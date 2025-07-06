@@ -19,6 +19,7 @@ http://cursor-project.solomontech-cloud.kr:8081/
 ```
 Target Server → Fluent Bit → FastAPI Backend → PostgreSQL → React Frontend
 ```
+<img width="664" alt="image" src="https://github.com/user-attachments/assets/b2886205-0d10-43e0-b05b-e1b94cbd6ba3" />
 
 ## 기술 스택
 
