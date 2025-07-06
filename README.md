@@ -11,9 +11,9 @@ https://cursor-project.solomontech-cloud.kr:444/
 
 ## 시스템 아키텍처
 
-### 서버 구성
-- **1번 서버**: Target Server + Fluent Bit (로그 수집)
-- **2번 서버**: Frontend + Backend + Database (분석 및 시각화)
+### 서버 구성 / 폴더 구조
+- **1번 서버**: Target Server + Fluent Bit (로그 수집) /target_server  /fluntbit
+- **2번 서버**: Frontend + Backend + Database (분석 및 시각화) /src
 
 ### 전체 플로우
 ```
