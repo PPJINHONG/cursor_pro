@@ -30,14 +30,13 @@ Target Server → Fluent Bit → Data Analysis System FastAPI Backend → Data A
 - **FastAPI**: 고성능 Python 웹 프레임워크
 - **PostgreSQL**: 메인 데이터베이스
 - **SQLAlchemy**: ORM 및 데이터베이스 관리
-- **OpenAI GPT-3.5-turbo**: AI 분석 및 인사이트 생성
+- **OpenAI GPT-3.5-turbo**: AI 분석 및 인사이트 생성 모델
 - **WebSocket**: 실시간 로그 스트리밍
 
 ### Frontend
-- **React 19**: 사용자 인터페이스
-- **TypeScript**: 타입 안전성
+- **React 19**: 프론트 프레임워크
+- **TypeScript**: javascript보다 타입 안전성 높은 언어
 - **Recharts**: 데이터 시각화 차트
-- **Axios**: HTTP 클라이언트
 - **Nginx**: 프로덕션 웹 서버
 
 ### Infrastructure,deploy
