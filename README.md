@@ -44,7 +44,7 @@ Target Server → Fluent Bit → Data Analysis System FastAPI Backend → Data A
 - **AWS route53, ACM , NLB , EC2 ,NATGW
 
 
-###배포 환경
+### 배포 환경
 <img width="794" alt="image" src="https://github.com/user-attachments/assets/9b6035b3-90d7-4540-a2c8-47984fce75d0" />
 
 
