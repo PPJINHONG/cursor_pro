@@ -1,8 +1,8 @@
 서버 로그 데이터 분석
-http://cursor-project.solomontech-cloud.kr/
+https://cursor-project.solomontech-cloud.kr/
 
 로그 수집 대상 서버
-http://cursor-project.solomontech-cloud.kr:8081/
+https://cursor-project.solomontech-cloud.kr:444/
 
 
 # 📊 데이터 분석 시스템 (Log Analytics Platform)
