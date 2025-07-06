@@ -41,7 +41,7 @@ Target Server → Fluent Bit → Data Analysis System FastAPI Backend → Data A
 - **Docker**: 컨테이너화
 - **Docker Compose**: 멀티 컨테이너 오케스트레이션
 - **Fluent Bit**: 로그 수집 및 전송
-- **AWS route53, ACM , NLB , EC2 ,NATGW
+- **AWS** : AWS route53, ACM , NLB , EC2 ,NATGW
 
 
 ### 배포 환경
