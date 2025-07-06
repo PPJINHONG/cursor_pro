@@ -140,6 +140,7 @@ GET  /api/slow           # 느린 응답 테스트
 ### 서버 2 (FastAPI Backend - 로그 수집 및 분석)
 **포트**: 8000
 
+```bash
 #### 로그 수집
 - `POST /log/ingest` - Fluent Bit에서 전송하는 로그 데이터 수집
 
@@ -166,5 +167,5 @@ GET  /api/slow           # 느린 응답 테스트
 - `GET /api/stats/recent-logs` - 최근 로그 조회
 - `GET /api/stats/endpoints` - 사용 가능한 엔드포인트 목록
 - `GET /api/stats/status-endpoint-top` - 상태코드별 엔드포인트별 호출수 TOP
-
+```
 
