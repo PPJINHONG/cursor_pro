@@ -17,7 +17,7 @@ http://cursor-project.solomontech-cloud.kr:8081/
 
 ### 전체 플로우
 ```
-Target Server → Fluent Bit → FastAPI Backend → PostgreSQL → React Frontend
+Target Server → Fluent Bit → Data Analysis System FastAPI Backend → Data Analysis System PostgreSQL → React Frontend
 ```
 <img width="664" alt="image" src="https://github.com/user-attachments/assets/b2886205-0d10-43e0-b05b-e1b94cbd6ba3" />
 
@@ -44,7 +44,12 @@ Target Server → Fluent Bit → FastAPI Backend → PostgreSQL → React Fronte
 - **AWS route53, ACM , NLB , EC2 ,NATGW
 
 
-## 📈 주요 기능
+###배포 환경
+<img width="794" alt="image" src="https://github.com/user-attachments/assets/9b6035b3-90d7-4540-a2c8-47984fce75d0" />
+
+
+
+##  주요 기능
 
 ### 1. 실시간 로그 수집
 - **Target Server**: api로그 발생지 API 서버
@@ -105,9 +110,9 @@ CREATE TABLE logs (
 );
 ```
 
-## 📋 API 엔드포인트
+##  API 엔드포인트
 
-### 🖥️ 서버 1 (Target Server - 로그 생성)
+### 서버 1 (Target Server - 로그 생성)
 **포트**: 8081
 ```bash
 # 테스트용 API 엔드포인트들
@@ -129,7 +134,7 @@ GET  /api/error/404      # 404 에러 발생
 GET  /api/slow           # 느린 응답 테스트
 ```
 
-### 🔍 서버 2 (FastAPI Backend - 로그 수집 및 분석)
+### 서버 2 (FastAPI Backend - 로그 수집 및 분석)
 **포트**: 8000
 
 #### 로그 수집
