@@ -142,30 +142,30 @@ GET  /api/slow           # 느린 응답 테스트
 
 ```bash
 #### 로그 수집
-- `POST /log/ingest` - Fluent Bit에서 전송하는 로그 데이터 수집
+POST /log/ingest` - Fluent Bit에서 전송하는 로그 데이터 수집
 
 #### 데이터 분석 API
-- `GET /api/stats/traffic` - 트래픽 분석 (시간대별 요청 분포)
-- `GET /api/stats/usage` - 엔드포인트별 사용량 분석
-- `GET /api/stats/errors` - 상태 코드별 에러 분포
-- `GET /api/stats/bottlenecks` - 성능 병목 탐지 (느린 API 식별)
-- `GET /api/stats/anomalies` - 이상 징후 감지
-- `GET /api/stats/recommendations` - 성능 개선 권장사항
-- `GET /api/stats/patterns` - 트래픽 패턴 분석
-- `GET /api/stats/endpoint-detail` - 특정 엔드포인트 상세 분석
-- `GET /api/stats/error-heatmap` - 시간대별/엔드포인트별 에러율 히트맵
-- `GET /api/stats/slow-endpoints` - 평균 응답시간이 가장 느린 엔드포인트 TOP N
+GET /api/stats/traffic` - 트래픽 분석 (시간대별 요청 분포)
+GET /api/stats/usage` - 엔드포인트별 사용량 분석
+GET /api/stats/errors` - 상태 코드별 에러 분포
+GET /api/stats/bottlenecks` - 성능 병목 탐지 (느린 API 식별)
+GET /api/stats/anomalies` - 이상 징후 감지
+GET /api/stats/recommendations` - 성능 개선 권장사항
+GET /api/stats/patterns` - 트래픽 패턴 분석
+GET /api/stats/endpoint-detail` - 특정 엔드포인트 상세 분석
+GET /api/stats/error-heatmap` - 시간대별/엔드포인트별 에러율 히트맵
+GET /api/stats/slow-endpoints` - 평균 응답시간이 가장 느린 엔드포인트 TOP N
 
 #### AI 기능
-- `POST /api/stats/ai/analyze` - 최근 5분 로그 AI 자동 분석
-- `POST /api/stats/ai/chat` - AI 채팅 (로그/성능 관련 질의응답)
+POST /api/stats/ai/analyze` - 최근 5분 로그 AI 자동 분석
+POST /api/stats/ai/chat` - AI 채팅 (로그/성능 관련 질의응답)
 
 #### 실시간 기능
-- `WebSocket /api/stats/logs/ws` - 실시간 로그 스트림
+WebSocket /api/stats/logs/ws` - 실시간 로그 스트림
 
 #### 기타 유틸리티
-- `GET /api/stats/recent-logs` - 최근 로그 조회
-- `GET /api/stats/endpoints` - 사용 가능한 엔드포인트 목록
-- `GET /api/stats/status-endpoint-top` - 상태코드별 엔드포인트별 호출수 TOP
+GET /api/stats/recent-logs` - 최근 로그 조회
+GET /api/stats/endpoints` - 사용 가능한 엔드포인트 목록
+GET /api/stats/status-endpoint-top` - 상태코드별 엔드포인트별 호출수 TOP
 ```
 
