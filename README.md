@@ -1,9 +1,9 @@
 서버 로그 데이터 분석
 https://cursor-project.solomontech-cloud.kr/
-
+dir - /src
 로그 수집 대상 서버
 https://cursor-project.solomontech-cloud.kr:444/
-
+dir - /target_server  /fluntbit
 
 # 📊 데이터 분석 시스템 (Log Analytics Platform)
 
