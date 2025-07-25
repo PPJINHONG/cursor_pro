@@ -1,13 +1,3 @@
-| 구성 요소 | 기술 | 역할 |
-| --- | --- | --- |
-| **프론트엔드** | React 19 + TypeScript | 대시보드 UI, 차트 시각화 |
-| **백엔드** | FastAPI (Python 3.10) | 로그 수집, 분석 API, AI 연동 |
-| **데이터베이스** | PostgreSQL | 로그 저장, 분석 결과 저장 |
-| **로그 전송** | Fluent Bit | 로그 수집 후 필터링 및 전송 |
-| **AI 분석** | OpenAI GPT-3.5-turbo | 자동 인사이트 생성 |
-| **시각화** | Recharts | 대시보드 차트 |
-| **개발 환경** | Docker + Docker Compose | 컨테이너화 배포 |
-| **운영 배포 환경** | ec2 + Docker Compose | AWS 환경 배포 |
 
 서버 로그 데이터 분석
 https://cursor-project.solomontech-cloud.kr/
